@@ -1,0 +1,44 @@
+# Qt widget fields to data
+def find_widget_type(self, key, sub_key=None):
+    """Looks up widget values based on key name and writes to constant
+
+    :param key: first key
+    :type key: str
+    :param sub_key: optional nested dictionary
+    :type: sub_key: str
+    """
+    # Dictionary for widgets based on given value type
+    type_dict = {
+        'str': QLineEdit,
+        'float': QDoubleSpinBox,
+        'bool': QCheckBox,
+    }
+    # Dictionary for widget specific methods
+    method_dictionary = {
+        'QLineEdit': 'text',
+        'QDoubleSpinBox': 'value',
+        'QCheckBox': 'isChecked'
+    }
+    if not sub_key:
+        widget_name = key
+        dictionary_lookup = PHYSICS_DATA[key]
+    else:
+        widget_name = f"{key}_{sub_key}"
+        dictionary_lookup = PHYSICS_DATA[key][sub_key]
+
+    # Grab string names of type classes
+    value_type = type(dictionary_lookup).__name__
+    string_widget_type = type_dict[value_type].__name__
+
+    # Find specific widget by name
+    widget_type = type_dict[value_type]
+    widget = self.findChild(widget_type, widget_name)
+
+    if not sub_key:
+        PHYSICS_DATA[key] = getattr(
+            widget,
+            method_dictionary[string_widget_type])()
+    else:
+        PHYSICS_DATA[key][sub_key] = getattr(
+            widget,
+            method_dictionary[string_widget_type])()
