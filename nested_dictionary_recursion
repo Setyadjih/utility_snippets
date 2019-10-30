@@ -1,0 +1,20 @@
+def nested_dictionary_search_apply(dictionary, integer):
+    """Recursive function to append integer value to multiple keys in given
+    dictionary
+
+    :param dictionary: Browzwear dictionary to search through
+    :type dictionary: dict
+    :param integer: Value from u3m to apply to dictionary
+    :type integer: int
+    """
+    for key, value in dictionary.items():
+        # height and width both need the values, the result is a square texture
+        if key == "height" or key == "width":
+            dictionary[key] = integer
+        else:
+            try:
+                nested_dictionary_search_apply(dictionary[key], integer)
+
+            # at the bottom of a nested dictionary it will error
+            except AttributeError:
+                continue
