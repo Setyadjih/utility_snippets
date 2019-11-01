@@ -12,6 +12,70 @@ if db_utils.check_file_in_entity(entity_id, file_name) \
     qApp.processEvents()
     continue
 
+def physics_database_input(entity_id, physics_dialog):
+    """
+    Enter physics entry to database upon successful execution of physics
+    data input
+
+    :param entity_id: entity id of fabric asset to look up
+    :type entity_id: int
+    :param physics_dialog: physics data entry widget
+    :type physics_dialog: QDialog
+    """
+    LOGGER.info('Applying changes to database')
+    # Create variables with default values for edit mode
+    source = physics_dialog.dropped_physics_json or 'User Input'
+    file_name = physics_dialog.source_json_name
+    destination = physics_dialog.destination_string
+    # Create physics db entry
+    print(source)
+    print(file_name)
+    print(destination)
+    create_physics_entry(entity_id,
+                         source_path=source,
+                         destination_path= destination,
+                         file_name=file_name)
+
+
+def create_physics_entry(entity_id, source_path, destination_path, file_name):
+    """
+    Reuse u3m database record to create a new entry. Allows us to create
+    an entry without generating all of the tokens needed for the
+    asset_entity function
+
+    :param entity_id: Entity id of asset in database
+    :type entity_id: int
+    :param source_path: Local file path of entry to create
+    :type source_path: str
+    :param destination_path
+    :param file_name: Name of file to enter
+    :type file_name: str
+    :return:
+    """
+    print(destination_path)
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    LOGGER.info('Creating physics entry')
+    cursor.executescript(
+        fr"""
+        CREATE TEMPORARY TABLE tmp AS
+        SELECT *
+        FROM asset_entity
+        WHERE entity_id = {entity_id} AND file_name like "%.u3m" 
+        AND version =(SELECT max(version) from asset_entity where 
+        entity_id={entity_id});
+        UPDATE tmp SET id = NULL, 
+                       file_name = "{file_name}", 
+                       file_path = "{destination_path}",
+                       version = version+1,
+                       original_file_name = "{source_path}",
+                       sub_context = "";
+        INSERT INTO asset_entity SELECT * FROM tmp;
+        DROP TABLE tmp;
+        """
+    )
+
 def update_entry_version(version, destination_path, entity_id, file_name):
 """Update an existing physics entry's version and file path in table
 
