@@ -1,0 +1,38 @@
+# Following the physics window format, we update .json
+# database entries instead of creating individual entries
+# for each version
+if db_utils.check_file_in_entity(entity_id, file_name) \
+        and item_extension == 'json':
+    db_utils.update_entry_version(tokens['version'],
+                                  destination_path,
+                                  entity_id,
+                                  file_name)
+    self.ui.progress_bar.setValue(progress_status)
+    self.tree_widget.remove_item(items=[widget_item])
+    qApp.processEvents()
+    continue
+
+def update_entry_version(version, destination_path, entity_id, file_name):
+"""Update an existing physics entry's version and file path in table
+
+:param version: Version token of file
+:type version: int
+:param destination_path: Database folder path
+:type destination_path: str
+:param entity_id: Entity id of asset in table
+:type entity_id: int
+:param file_name: File name for input to db
+:type file_name: str
+"""
+connection = get_connection()
+cursor = connection.cursor()
+
+# Execute SQL commands to update version and file path of file
+LOGGER.info('Updating physics entry')
+cursor.execute(
+    fr'UPDATE asset_entity '
+    fr'SET version = {version},'
+    fr'file_path = "{destination_path}" '
+    fr'WHERE entity_id = {entity_id} AND '
+    fr'file_name = "{file_name}"'
+)
