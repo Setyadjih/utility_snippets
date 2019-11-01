@@ -100,3 +100,45 @@ cursor.execute(
     fr'WHERE entity_id = {entity_id} AND '
     fr'file_name = "{file_name}"'
 )
+
+def get_u3m_version(file_path):
+    """Queries SQL database for linked u3m files and creates version list
+
+    :param file_path: entity id in SQL database
+    :type file_path: str
+    :return: u3m version
+    :rtype str
+    """
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    # Execute SQL commands to get version of given u3m file
+    cursor.execute(fr"SELECT version FROM asset_entity WHERE file_path"
+                   fr"='{file_path}' and file_name like '%.u3m'")
+
+    # Extract file paths from tuples
+    for row in cursor.fetchall():
+        return row[0]
+
+
+def check_file_in_entity(entity_id, file_name):
+    """Check SQL database if file is linked to given entity
+
+    :param entity_id: entity id in SQL database
+    :type entity_id: int
+    :param file_name: name of file to check for
+    :type file_name: str
+    :return: .u3m absolute file path list
+    :rtype list
+    """
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    # Execute SQL commands to check for physics entries
+    cursor.execute(fr"SELECT file_path FROM asset_entity WHERE "
+                   fr"entity_id={entity_id} and file_name='{file_name}'")
+
+    # Return bool based on findings
+    if cursor.fetchall():
+        return True
+    return False
